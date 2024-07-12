@@ -1,0 +1,81 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.0'
+
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    test:
+      run-on: ubuntu-latest
+
+      needs: build
+
+      steps:
+        -name: Checkout repository
+        uses: actions/checkout@v2
+
+      -name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+         dotenet-version:'8.0'
+
+       -name:Run tests
+       run:dotnet test --no-restore --verbosity normal
+
+    deploy:
+      needs:build
+      runs-on:ubuntu-latest
+
+     steps:
+        -name: Checkout repository
+        uses: actions/checkout@v2
+
+      -name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+         dotenet-version:'8.0'
+
+      - name: Publish
+        ruin: dotnet publish -c Release -o out
+
+        - name: Deploy
+      env:
+        FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+        FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      run: |
+        lftp -c "set ftp:ssl-allow no; open $FTP_SERVER; user $FTP_USERNAME $FTP_PASSWORD; mirror -R out /path/to/deploy"
+
+        
+
+
+       
+       
+       
+         
+      
+      
+
+  
