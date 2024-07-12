@@ -19,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '8.0'
+        dotnet-version: '8.0' # Use the desired .NET version
 
     - name: Install dependencies
       run: dotnet restore
@@ -27,40 +27,26 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    test:
-      run-on: ubuntu-latest
+    - name: Run tests
+      run: dotnet test --no-restore --verbosity normal
 
-      needs: build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
-      steps:
-        -name: Checkout repository
-        uses: actions/checkout@v2
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      -name: Setup .NET
-      uses: actions/setup-dotnet@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
       with:
-         dotenet-version:'8.0'
+        dotnet-version: '8.0'
 
-       -name:Run tests
-       run:dotnet test --no-restore --verbosity normal
+    - name: Publish
+      run: dotnet publish -c Release -o out
 
-    deploy:
-      needs:build
-      runs-on:ubuntu-latest
-
-     steps:
-        -name: Checkout repository
-        uses: actions/checkout@v2
-
-      -name: Setup .NET
-      uses: actions/setup-dotnet@v2
-      with:
-         dotenet-version:'8.0'
-
-      - name: Publish
-        ruin: dotnet publish -c Release -o out
-
-        - name: Deploy
+    - name: Deploy
       env:
         FTP_SERVER: ${{ secrets.FTP_SERVER }}
         FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -68,10 +54,6 @@ jobs:
       run: |
         lftp -c "set ftp:ssl-allow no; open $FTP_SERVER; user $FTP_USERNAME $FTP_PASSWORD; mirror -R out /path/to/deploy"
 
-        
-
-
-       
        
        
          
